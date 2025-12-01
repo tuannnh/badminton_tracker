@@ -105,7 +105,7 @@ def session_detail(session_id):
 
 @user_bp.route('/debts')
 def debts():
-    """Trang xem nợ và tiền nhận lại"""
+    """Trang xem tiền chưa thanh toán và tiền nhận lại"""
     view_type = request. args.get('type', 'owed')  # 'owed' or 'receive'
 
     year = request.args. get('year', type=int)
@@ -133,7 +133,7 @@ def debts():
         page_title = "Người được nhận lại tiền"
         amount_field = 'total_to_receive'
     else:
-        # Hiển thị người còn nợ
+        # Hiển thị người còn chưa thanh toán
         if start_date and end_date:
             data_list = Session.get_all_debts(start_date, end_date)
             details = Session.get_debts_with_details_by_month(year, month)

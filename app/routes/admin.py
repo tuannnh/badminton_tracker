@@ -487,7 +487,7 @@ def quick_payment():
 @admin_bp.route('/quick-payment/mark-all-paid', methods=['POST'])
 @login_required
 def mark_all_paid():
-    """Đánh dấu một người đã trả hết tất cả nợ"""
+    """Đánh dấu một người đã trả hết tất cả tiền chưa thanh toán"""
     player_name = request.form['player_name']
 
     all_sessions = Session.find_all(limit=500)
