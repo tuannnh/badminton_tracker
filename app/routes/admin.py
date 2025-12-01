@@ -297,7 +297,7 @@ def session_edit(session_id):
     session_doc = Session.find_by_id(session_id)
     if not session_doc:
         flash('Không tìm thấy buổi chơi', 'error')
-        return redirect(url_for('admin. sessions'))
+        return redirect(url_for('admin.sessions'))
 
     players = Player.find_all()
     court_payer = Player.get_default_court_payer()
@@ -530,7 +530,7 @@ def mark_received():
                 count += 1
 
     flash(f'Đã trả lại {count} buổi ({total_returned:,}đ) cho {player_name}'.replace(',', '. '), 'success')
-    return redirect(url_for('admin. quick_payment', type='receive'))
+    return redirect(url_for('admin.quick_payment', type='receive'))
 
 
 # ==========================================
