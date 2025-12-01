@@ -11,9 +11,9 @@
         </a>
     </div>
 
-    <!-- Stats All Time: Nợ và Nhận lại -->
+    <!-- Stats All Time: Chưa thanh toán và Nhận lại -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Tổng nợ -->
+        <!-- Tổng chưa thanh toán -->
         <div class="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl shadow p-6 text-white">
             <div class="flex items-center justify-between">
                 <div>
@@ -193,7 +193,7 @@
                             {% endif %}
                         {% endfor %}
                         {% if unpaid.count > 0 %}
-                        <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">{{ unpaid.count }} nợ</span>
+                        <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">{{ unpaid.count }} chưa trả</span>
                         {% endif %}
                         {% set to_receive_count = namespace(count=0) %}
                         {% for p in s.participants %}

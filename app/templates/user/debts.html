@@ -18,7 +18,7 @@
         </a>
     </div>
 
-    <!-- Toggle giữa Nợ và Nhận lại -->
+    <!-- Toggle giữa Chưa thanh toán và Nhận lại -->
     <div class="bg-white rounded-xl shadow p-4">
         <div class="flex space-x-4">
             <a href="/debts{% if selected_year %}?year={{ selected_year }}&month={{ selected_month }}{% endif %}"
@@ -32,7 +32,7 @@
         </div>
     </div>
 
-    <!-- Filter by Month (chỉ cho view nợ) -->
+    <!-- Filter by Month (chỉ cho view chưa thanh toán) -->
     {% if view_type != 'receive' and months_with_debts %}
     <div class="bg-white rounded-xl shadow p-4">
         <div class="flex flex-wrap items-center gap-3">

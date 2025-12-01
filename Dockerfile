@@ -30,7 +30,7 @@ ENV PATH=/home/appuser/.local/bin:$PATH
 COPY --chown=appuser:appgroup . .
 
 # Remove unnecessary files
-RUN rm -rf .git .gitignore .env.example tests/ scripts/ *.md . github/
+RUN rm -rf .git .gitignore .env.example tests/ scripts/ *.md .github/
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

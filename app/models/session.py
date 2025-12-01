@@ -74,7 +74,7 @@ class Session:
 
     @classmethod
     def get_player_debt(cls, player_name, start_date=None, end_date=None):
-        """Tính nợ của một người"""
+        """Tính tiền chưa thanh toán của một người"""
         if start_date and end_date:
             sessions = cls.find_by_date_range(start_date, end_date)
         else:
@@ -106,14 +106,18 @@ class Session:
         }
 
     @classmethod
-    def get_all_debts(cls, start_date=None, end_date=None):
-        """Lấy danh sách tất cả Người còn chưa thanh toán"""
+    def get_player_net_balances(cls, start_date=None, end_date=None):
+        """Tính net balance (số dư ròng) cho tất cả người chơi.
+        net_balance = total_to_receive - total_owed
+        Nếu > 0: được nhận lại tiền
+        Nếu < 0: còn chưa thanh toán
+        """
         if start_date and end_date:
             sessions = cls.find_by_date_range(start_date, end_date)
         else:
             sessions = cls.find_all(limit=500)
 
-        debts = {}
+        balances = {}
 
         for session in sessions:
             if session.get('status') != 'completed':
@@ -125,21 +129,48 @@ class Session:
                 amount_paid = p.get('amount_paid', 0)
                 amount_to_receive = p.get('amount_to_receive', 0)
 
-                # Chỉ tính nợ nếu không phải người được nhận lại tiền
+                if player_name not in balances:
+                    balances[player_name] = {
+                        '_id': player_name,
+                        'total_owed': 0,
+                        'total_to_receive': 0,
+                        'sessions_count': 0
+                    }
+
+                # Cộng dồn tiền được nhận lại
                 if amount_to_receive > 0:
-                    continue
+                    balances[player_name]['total_to_receive'] += amount_to_receive
+                else:
+                    # Cộng dồn tiền còn chưa thanh toán
+                    owed = amount_due - amount_paid
+                    if owed > 0:
+                        balances[player_name]['total_owed'] += owed
 
-                owed = amount_due - amount_paid
+                balances[player_name]['sessions_count'] += 1
 
-                if owed > 0:
-                    if player_name not in debts:
-                        debts[player_name] = {
-                            '_id': player_name,
-                            'total_owed': 0,
-                            'sessions_count': 0
-                        }
-                    debts[player_name]['total_owed'] += owed
-                    debts[player_name]['sessions_count'] += 1
+        # Tính net balance cho mỗi người
+        for player_name in balances:
+            net = balances[player_name]['total_to_receive'] - balances[player_name]['total_owed']
+            balances[player_name]['net_balance'] = net
+
+        return balances
+
+    @classmethod
+    def get_all_debts(cls, start_date=None, end_date=None):
+        """Lấy danh sách tất cả Người còn chưa thanh toán (sau khi bù trừ với tiền được nhận lại)"""
+        balances = cls.get_player_net_balances(start_date, end_date)
+
+        debts = {}
+
+        for player_name, balance in balances.items():
+            net = balance['net_balance']
+            # Chỉ hiển thị người có net_balance < 0 (thực sự còn chưa thanh toán)
+            if net < 0:
+                debts[player_name] = {
+                    '_id': player_name,
+                    'total_owed': abs(net),  # Số tiền thực sự còn chưa thanh toán
+                    'sessions_count': balance['sessions_count']
+                }
 
         result = list(debts.values())
         result.sort(key=lambda x: x['total_owed'], reverse=True)
@@ -147,31 +178,20 @@ class Session:
 
     @classmethod
     def get_all_to_receive(cls, start_date=None, end_date=None):
-        """Lấy danh sách tất cả người được nhận lại tiền"""
-        if start_date and end_date:
-            sessions = cls.find_by_date_range(start_date, end_date)
-        else:
-            sessions = cls.find_all(limit=500)
+        """Lấy danh sách tất cả người được nhận lại tiền (sau khi bù trừ với tiền chưa thanh toán)"""
+        balances = cls.get_player_net_balances(start_date, end_date)
 
         to_receive = {}
 
-        for session in sessions:
-            if session.get('status') != 'completed':
-                continue
-
-            for p in session.get('participants', []):
-                player_name = p.get('player_name', '')
-                amount_to_receive = p.get('amount_to_receive', 0)
-
-                if amount_to_receive > 0:
-                    if player_name not in to_receive:
-                        to_receive[player_name] = {
-                            '_id': player_name,
-                            'total_to_receive': 0,
-                            'sessions_count': 0
-                        }
-                    to_receive[player_name]['total_to_receive'] += amount_to_receive
-                    to_receive[player_name]['sessions_count'] += 1
+        for player_name, balance in balances.items():
+            net = balance['net_balance']
+            # Chỉ hiển thị người có net_balance > 0 (thực sự được nhận lại tiền)
+            if net > 0:
+                to_receive[player_name] = {
+                    '_id': player_name,
+                    'total_to_receive': net,  # Số tiền thực sự được nhận lại
+                    'sessions_count': balance['sessions_count']
+                }
 
         result = list(to_receive.values())
         result.sort(key=lambda x: x['total_to_receive'], reverse=True)
@@ -179,7 +199,7 @@ class Session:
 
     @classmethod
     def get_all_debts_all_time(cls):
-        """Lấy tổng nợ tất cả thời gian"""
+        """Lấy tổng tiền chưa thanh toán tất cả thời gian"""
         return cls.get_all_debts(start_date=None, end_date=None)
 
     @classmethod
@@ -189,7 +209,7 @@ class Session:
 
     @classmethod
     def get_total_owed_all_time(cls):
-        """Lấy tổng số tiền còn nợ all time"""
+        """Lấy tổng số tiền còn chưa thanh toán all time"""
         debts = cls.get_all_debts_all_time()
         total_owed = sum(d['total_owed'] for d in debts)
         people_count = len(debts)
@@ -213,7 +233,7 @@ class Session:
 
     @classmethod
     def get_all_debts_with_details(cls):
-        """Lấy chi tiết nợ từng người với danh sách sessions"""
+        """Lấy chi tiết tiền chưa thanh toán từng người với danh sách sessions"""
         sessions = cls.find_all(limit=500)
 
         debt_details = {}
@@ -300,7 +320,7 @@ class Session:
 
     @classmethod
     def get_debts_with_details_by_month(cls, year, month):
-        """Lấy chi tiết nợ theo tháng cụ thể"""
+        """Lấy chi tiết tiền chưa thanh toán theo tháng cụ thể"""
         from dateutil.relativedelta import relativedelta
         start_date = datetime(year, month, 1)
         end_date = start_date + relativedelta(months=1)
@@ -381,7 +401,7 @@ class Session:
 
     @classmethod
     def get_months_with_debts(cls):
-        """Lấy danh sách các tháng có nợ chưa thanh toán"""
+        """Lấy danh sách các tháng có tiền chưa thanh toán"""
         sessions = cls.find_all(limit=500)
 
         months = {}

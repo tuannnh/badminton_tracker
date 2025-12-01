@@ -87,18 +87,3 @@ class User:
                 'updated_at': datetime.now()
             }}
         )
-
-    @classmethod
-    def ensure_admin_exists(cls):
-        """Đảm bảo có ít nhất 1 admin account"""
-        admin = cls.find_by_username('admin')
-        if not admin:
-            cls.create(
-                username='admin',
-                email='admin@badmintontracker.com',
-                password='0112358',
-                role='admin'
-            )
-            print("[User] Created default admin account: admin / 0112358")
-            return True
-        return False

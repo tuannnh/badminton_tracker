@@ -15,7 +15,7 @@
         </a>
     </div>
 
-    <!-- Tổng nợ & Nhận lại -->
+    <!-- Tổng chưa thanh toán & Nhận lại -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Tổng chưa thanh toán -->
         {% if total_owed_all_time. total_owed > 0 %}
@@ -82,7 +82,7 @@
         {% endif %}
     </div>
 
-    <!-- Quick Filter: Tháng có nợ -->
+    <!-- Quick Filter: Tháng có tiền chưa thanh toán -->
     {% if months_with_debts %}
     <div class="bg-white rounded-xl shadow p-4">
         <h3 class="text-sm font-medium text-gray-500 mb-3">

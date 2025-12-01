@@ -68,7 +68,7 @@ SYSTEM_PROMPT = """Bạn là trợ lý AI cho ứng dụng quản lý cầu lôn
 Nhiệm vụ của bạn là phân tích câu hỏi của người dùng và trả về một JSON object chứa thông tin để query database. 
 
 Các loại query hỗ trợ:
-1. player_debt: Tính nợ của một hoặc nhiều người chơi
+1. player_debt: Tính tiền chưa thanh toán của một hoặc nhiều người chơi
 2. player_sessions: Lấy các buổi chơi của một người
 3. all_debts: Lấy danh sách tất cả Người còn chưa thanh toán
 4. session_detail: Chi tiết một buổi chơi cụ thể theo ngày
@@ -90,7 +90,7 @@ Quy tắc:
 - "ngày 20/11" → year: 2025, month: 11, day: 20
 - Nếu không nói năm, mặc định là năm hiện tại
 - Nếu user hỏi về nhiều người (VD: "Ly và Mạnh", "Tuấn, Ly"), trả về mảng player_names
-- Nếu user hỏi "ai còn nợ" mà không nói tháng cụ thể, để year và month là null để lấy all time
+- Nếu user hỏi "ai còn chưa thanh toán" hoặc "ai còn nợ" mà không nói tháng cụ thể, để year và month là null để lấy all time
 """
 
 RESPONSE_PROMPT = """Bạn là trợ lý AI cho ứng dụng quản lý cầu lông. 
@@ -414,7 +414,7 @@ def generate_response_fallback(query_result: dict) -> str:
 
             total_owed = safe_int(p.get('total_owed', 0))
             if total_owed > 0:
-                return f"""💰 **{p['player_name']}** còn nợ **{format_money(total_owed)}** trong {period}. 
+                return f"""💰 **{p['player_name']}** còn chưa thanh toán **{format_money(total_owed)}** trong {period}. 
 
 📊 Chi tiết:
 - Tổng phải trả: {format_money(p.get('total_due', 0))}
@@ -425,7 +425,7 @@ def generate_response_fallback(query_result: dict) -> str:
 
         else:
             # Multiple players
-            lines = [f"💰 **Tổng nợ của {len(players)} người** trong {period}:\n"]
+            lines = [f"💰 **Tổng tiền chưa thanh toán của {len(players)} người** trong {period}:\n"]
 
             for p in players:
                 if p.get('no_data'):
@@ -458,7 +458,7 @@ def generate_response_fallback(query_result: dict) -> str:
             paid = safe_int(p.get('amount_paid', 0))
             owed = amount - paid
             is_paid = p.get('is_paid', False)
-            status = "✅" if is_paid else f"❌ còn nợ {format_money(owed)}"
+            status = "✅" if is_paid else f"❌ chưa thanh toán {format_money(owed)}"
             lines.append(f"- {s.get('date', 'N/A')}: {format_money(amount)} {status}")
             total += amount
             if not is_paid:
@@ -466,7 +466,7 @@ def generate_response_fallback(query_result: dict) -> str:
 
         lines.append(f"\n💵 **Tổng: {format_money(total)}**")
         if total_owed > 0:
-            lines.append(f"⚠️ **Còn nợ: {format_money(total_owed)}**")
+            lines.append(f"⚠️ **Còn chưa thanh toán: {format_money(total_owed)}**")
         return "\n".join(lines)
 
     elif query_type == 'all_debts':
@@ -475,7 +475,7 @@ def generate_response_fallback(query_result: dict) -> str:
 
         total_all = sum(safe_int(d.get('total_owed', 0)) for d in data)
         lines = [f"📋 **Danh sách người còn chưa thanh toán** ({period}):\n"]
-        lines.append(f"💰 Tổng nợ: **{format_money(total_all)}**\n")
+        lines.append(f"💰 Tổng tiền chưa thanh toán: **{format_money(total_all)}**\n")
 
         for d in data:
             name = d.get('_id', 'Unknown')
@@ -493,7 +493,7 @@ def generate_response_fallback(query_result: dict) -> str:
             amount_due = safe_int(p.get('amount_due', 0))
             amount_paid = safe_int(p.get('amount_paid', 0))
             owed = amount_due - amount_paid
-            status = "✅ Đã trả đủ" if p.get('is_paid') else f"❌ Còn nợ {format_money(owed)}"
+            status = "✅ Đã trả đủ" if p.get('is_paid') else f"❌ Còn chưa thanh toán {format_money(owed)}"
             return f"""📅 **Buổi chơi ngày {date_str}**
 
 👤 **{player_name}**:
@@ -521,7 +521,7 @@ def generate_response_fallback(query_result: dict) -> str:
    - Tiền cầu: {format_money(total_shuttlecock)}
 ⚠️ Tổng chưa thanh toán: **{format_money(total_owed)}**"""
 
-    return "Xin lỗi, tôi không hiểu câu hỏi.  Vui lòng thử lại với các câu như:\n- \"Ai còn nợ?\"\n- \"Ly còn nợ bao nhiêu?\"\n- \"Tổng tiền Ly và Mạnh còn thiếu?\"\n- \"Thống kê tháng 11\""
+    return "Xin lỗi, tôi không hiểu câu hỏi. Vui lòng thử lại với các câu như:\n- \"Ai còn chưa thanh toán?\"\n- \"Ly còn chưa thanh toán bao nhiêu?\"\n- \"Tổng tiền Ly và Mạnh còn thiếu?\"\n- \"Thống kê tháng 11\""
 
 
 def chat(user_message: str) -> str:

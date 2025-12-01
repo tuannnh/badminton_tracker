@@ -47,7 +47,6 @@ def create_app():
         from app.models.user import User
         from app.models.settings import Settings
 
-        User.ensure_admin_exists()
         Settings.ensure_defaults_exist()
 
     # Register blueprints
