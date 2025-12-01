@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách buổi chơi - Badminton Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header & Filter -->
+    <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-calendar-alt mr-2 text-green-600"></i>
+                Danh sách buổi chơi
+            </h1>
+
+            <form method="GET" class="flex flex-wrap items-center gap-3">
+                <select name="month" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>Tháng {{ m }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="year" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    {% for y in range(2024, 2027) %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="player" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <option value="">Tất cả người chơi</option>
+                    {% for player in players %}
+                    <option value="{{ player. name }}" {% if player.name == selected_player %}selected{% endif %}>{{ player. name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-filter mr-1"></i> Lọc
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        {% if sessions %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sân</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người chơi</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng tiền</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                            <th class="px-6 py-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for session in sessions %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="font-medium text-gray-800">{{ session.date | format_date }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-gray-800">{{ session.court. name or 'N/A' }}</p>
+                                <p class="text-sm text-gray-500">{{ session. court.location or '' }}</p>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-600">
+                                {{ session.start_time or '--:--' }} - {{ session.end_time or '--:--' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex -space-x-2">
+                                    {% for p in session.participants[:4] %}
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center border-2 border-white" title="{{ p.player_name }}">
+                                        <span class="text-xs font-medium text-green-700">{{ p.player_name[0] }}</span>
+                                    </div>
+                                    {% endfor %}
+                                    {% if session.participants | length > 4 %}
+                                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white">
+                                        <span class="text-xs text-gray-600">+{{ session.participants | length - 4 }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right font-semibold text-green-600">
+                                {{ session.total_cost | format_currency }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                {% set unpaid = session.participants | selectattr('is_paid', 'false') | list | length %}
+                                {% if unpaid == 0 %}
+                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Đã thu đủ</span>
+                                {% else %}
+                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Còn {{ unpaid }} người chưa thanh toán</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="/sessions/{{ session._id }}" class="text-green-600 hover:text-green-800">
+                                    Chi tiết →
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class="fas fa-calendar-times text-5xl mb-4"></i>
+                <p class="text-lg">Không có buổi chơi nào trong thời gian này</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

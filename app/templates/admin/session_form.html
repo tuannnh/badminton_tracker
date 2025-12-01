@@ -1,0 +1,153 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{% if is_edit %}Sửa{% else %}Thêm{% endif %} buổi chơi - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-800">
+            {% if is_edit %}Sửa buổi chơi{% else %}Thêm buổi chơi mới{% endif %}
+        </h1>
+        <a href="{{ url_for('admin.sessions') }}" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-1"></i>Quay lại
+        </a>
+    </div>
+
+    <form method="POST" class="space-y-6">
+        <!-- Thông tin cơ bản -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4"><i class="fas fa-info-circle mr-2 text-blue-500"></i>Thông tin cơ bản</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ngày chơi *</label>
+                    <input type="date" name="date" required
+                           value="{{ session_data. date. strftime('%Y-%m-%d') if session_data else '' }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giờ bắt đầu</label>
+                    <input type="time" name="start_time"
+                           value="{{ session_data.start_time if session_data else defaults.start_time }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giờ kết thúc</label>
+                    <input type="time" name="end_time"
+                           value="{{ session_data.end_time if session_data else defaults.end_time }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin sân -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4"><i class="fas fa-building mr-2 text-purple-500"></i>Thông tin sân</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên sân</label>
+                    <input type="text" name="court_name"
+                           value="{{ session_data.court. name if session_data else defaults.court_name }}"
+                           placeholder="VD: Sân Cầu Lông ABC"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
+                    <input type="text" name="court_location"
+                           value="{{ session_data.court.location if session_data else defaults.court_location }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giá/giờ (VNĐ) *</label>
+                    <input type="number" name="price_per_hour" required
+                           value="{{ session_data.court.price_per_hour if session_data else defaults.price_per_hour }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số giờ *</label>
+                    <input type="number" name="total_hours" step="0.5" required
+                           value="{{ session_data. court.total_hours if session_data else defaults.total_hours }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Người trả tiền sân</label>
+                    <select name="court_payer_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                        {% for player in players %}
+                        <option value="{{ player._id }}"
+                            {% if session_data and session_data. court.paid_by. player_id == player._id %}selected
+                            {% elif not session_data and court_payer and player._id == court_payer._id %}selected{% endif %}>
+                            {{ player.name }}{% if player.is_default_court_payer %} (mặc định){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin cầu -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4"><i class="fas fa-circle mr-2 text-yellow-500"></i>Thông tin cầu</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số quả cầu *</label>
+                    <input type="number" name="shuttlecock_quantity" required
+                           value="{{ session_data.shuttlecock. quantity if session_data else defaults.shuttlecock_quantity }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giá/quả (VNĐ) *</label>
+                    <input type="number" name="price_per_shuttlecock" required
+                           value="{{ session_data.shuttlecock.price_per_shuttlecock if session_data else defaults.shuttlecock_price }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Người trả tiền cầu</label>
+                    <select name="shuttlecock_payer_id" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                        {% for player in players %}
+                        <option value="{{ player._id }}"
+                            {% if session_data and session_data. shuttlecock.paid_by.player_id == player._id %}selected
+                            {% elif not session_data and shuttlecock_payer and player._id == shuttlecock_payer._id %}selected{% endif %}>
+                            {{ player.name }}{% if player.is_default_shuttlecock_payer %} (mặc định){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Người tham gia -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4"><i class="fas fa-users mr-2 text-green-500"></i>Người tham gia *</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {% for player in players %}
+                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                    <input type="checkbox" name="participants" value="{{ player._id }}"
+                           {% if session_data %}
+                               {% for p in session_data. participants %}
+                                   {% if p. player_id == player._id %}checked{% endif %}
+                               {% endfor %}
+                           {% endif %}
+                           class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                    <span class="ml-2 text-gray-700">{{ player.name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Ghi chú -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4"><i class="fas fa-sticky-note mr-2 text-gray-500"></i>Ghi chú</h2>
+            <textarea name="note" rows="3"
+                      placeholder="Ghi chú thêm..."
+                      class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">{{ session_data.note if session_data else '' }}</textarea>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('admin.sessions') }}" class="px-6 py-2 border rounded-lg hover:bg-gray-50 transition">Hủy</a>
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                <i class="fas fa-save mr-2"></i>{% if is_edit %}Cập nhật{% else %}Tạo buổi chơi{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

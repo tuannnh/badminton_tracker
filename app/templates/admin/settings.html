@@ -1,0 +1,95 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Cài đặt - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-800">
+        <i class="fas fa-cogs mr-2 text-gray-600"></i>Cài đặt hệ thống
+    </h1>
+
+    <form method="POST" class="space-y-6">
+        <!-- Thông tin sân mặc định -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">
+                <i class="fas fa-building mr-2 text-purple-500"></i>Thông tin sân mặc định
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên sân</label>
+                    <input type="text" name="default_court_name"
+                           value="{{ defaults.court_name }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
+                    <input type="text" name="default_court_location"
+                           value="{{ defaults.court_location }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giá/giờ (VNĐ)</label>
+                    <input type="number" name="default_court_price_per_hour"
+                           value="{{ defaults.price_per_hour }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số giờ chơi</label>
+                    <input type="number" name="default_total_hours" step="0.5"
+                           value="{{ defaults.total_hours }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Thời gian mặc định -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">
+                <i class="fas fa-clock mr-2 text-blue-500"></i>Thời gian mặc định
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giờ bắt đầu</label>
+                    <input type="time" name="default_start_time"
+                           value="{{ defaults.start_time }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giờ kết thúc</label>
+                    <input type="time" name="default_end_time"
+                           value="{{ defaults.end_time }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin cầu mặc định -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">
+                <i class="fas fa-circle mr-2 text-yellow-500"></i>Thông tin cầu mặc định
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số quả cầu</label>
+                    <input type="number" name="default_shuttlecock_quantity"
+                           value="{{ defaults.shuttlecock_quantity }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Giá/quả (VNĐ)</label>
+                    <input type="number" name="default_shuttlecock_price"
+                           value="{{ defaults.shuttlecock_price }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                <i class="fas fa-save mr-2"></i>Lưu cài đặt
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

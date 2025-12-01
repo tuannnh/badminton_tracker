@@ -1,0 +1,238 @@
+# ====================================
+# Python
+# ====================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed. cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# ====================================
+# Virtual Environments
+# ====================================
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+Pipfile.lock
+
+# ====================================
+# IDE / Editors
+# ====================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.netrwhist
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# ====================================
+# OS Generated Files
+# ====================================
+# macOS
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop. ini
+$RECYCLE.BIN/
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ====================================
+# Environment & Secrets
+# ====================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+*.local.env
+secrets.yaml
+secrets.yml
+secrets.json
+*.pem
+*.key
+*.crt
+*.p12
+
+# ====================================
+# Logs & Temp Files
+# ====================================
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+*.backup
+tmp/
+temp/
+
+# ====================================
+# Database
+# ====================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+dump.rdb
+
+# ====================================
+# Docker (local overrides)
+# ====================================
+docker-compose.override.yml
+docker-compose.local.yml
+.docker/
+
+# ====================================
+# Node.js (if any frontend)
+# ====================================
+node_modules/
+npm-debug.log*
+yarn-debug. log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ====================================
+# Flask / Application Specific
+# ====================================
+instance/
+.webassets-cache
+flask_session/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# ====================================
+# Jupyter Notebooks
+# ====================================
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+profile_default/
+ipython_config.py
+
+# ====================================
+# MyPy / Type Checking
+# ====================================
+. mypy_cache/
+.dmypy.json
+dmypy.json
+
+
+# ====================================
+# Documentation Build
+# ====================================
+docs/_build/
+site/
+
+# ====================================
+# Miscellaneous
+# ====================================
+*.bak
+*.orig
+.project
+.pydevproject
+.settings/
+*.mo
+*.pot
+
+# Test artifacts
+test-results/
+test-output/
+screenshots/
+
+# Profiling
+*.prof

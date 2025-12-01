@@ -1,0 +1,71 @@
+<! DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Badminton Tracker{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare. com/ajax/libs/font-awesome/6.5.1/css/all. min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <a href="/" class="text-xl font-bold flex items-center">
+                    <i class="fas fa-shuttlecock mr-2"></i>
+                    Badminton Tracker
+                </a>
+                <div class="flex space-x-1">
+                    <a href="/" class="hover:bg-white/20 px-4 py-2 rounded-lg transition {% if request.endpoint == 'user. index' %}bg-white/20{% endif %}">
+                        <i class="fas fa-home mr-1"></i> Trang chủ
+                    </a>
+                    <a href="/sessions" class="hover:bg-white/20 px-4 py-2 rounded-lg transition {% if 'sessions' in request.endpoint %}bg-white/20{% endif %}">
+                        <i class="fas fa-calendar mr-1"></i> Buổi chơi
+                    </a>
+                    <a href="/debts" class="hover:bg-white/20 px-4 py-2 rounded-lg transition {% if 'debts' in request. endpoint %}bg-white/20{% endif %}">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i> Đợi thanh toán
+                    </a>
+                    <a href="/chat" class="hover:bg-white/20 px-4 py-2 rounded-lg transition {% if 'chat' in request.endpoint %}bg-white/20{% endif %}">
+                        <i class="fas fa-robot mr-1"></i> Chat AI
+                    </a>
+                    <a href="/admin" class="hover:bg-white/20 px-4 py-2 rounded-lg transition">
+                        <i class="fas fa-cog mr-1"></i> Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-4 mt-4">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-lg mb-2 {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+<!--    <footer class="bg-gray-800 text-gray-400 py-4 mt-8">-->
+<!--        <div class="container mx-auto px-4 text-center">-->
+<!--            <p>&copy; 2025 Badminton Tracker. Made with ❤️</p>-->
+<!--        </div>-->
+<!--    </footer>-->
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

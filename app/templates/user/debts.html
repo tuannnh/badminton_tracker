@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} - Badminton Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">
+            {% if view_type == 'receive' %}
+            <i class="fas fa-hand-holding-usd mr-2 text-blue-500"></i>
+            {% else %}
+            <i class="fas fa-file-invoice-dollar mr-2 text-red-500"></i>
+            {% endif %}
+            {{ page_title }}
+        </h1>
+        <a href="/" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-1"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Toggle giữa Nợ và Nhận lại -->
+    <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex space-x-4">
+            <a href="/debts{% if selected_year %}?year={{ selected_year }}&month={{ selected_month }}{% endif %}"
+               class="flex-1 text-center py-3 rounded-lg transition {% if view_type != 'receive' %}bg-red-100 text-red-700 font-medium{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                <i class="fas fa-user-clock mr-2"></i>Người còn chưa thanh toán
+            </a>
+            <a href="/debts?type=receive{% if selected_year %}&year={{ selected_year }}&month={{ selected_month }}{% endif %}"
+               class="flex-1 text-center py-3 rounded-lg transition {% if view_type == 'receive' %}bg-blue-100 text-blue-700 font-medium{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                <i class="fas fa-hand-holding-usd mr-2"></i>Người được nhận lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter by Month (chỉ cho view nợ) -->
+    {% if view_type != 'receive' and months_with_debts %}
+    <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="text-sm text-gray-500">Lọc theo:</span>
+            <a href="/debts"
+               class="px-3 py-1. 5 rounded-lg text-sm transition {% if not selected_month %}bg-green-600 text-white{% else %}bg-gray-100 hover:bg-gray-200 text-gray-700{% endif %}">
+                Tất cả
+            </a>
+            {% for m in months_with_debts[:6] %}
+            <a href="/debts?year={{ m. year }}&month={{ m.month }}"
+               class="px-3 py-1.5 rounded-lg text-sm transition {% if selected_year == m.year and selected_month == m. month %}bg-green-600 text-white{% else %}bg-gray-100 hover:bg-gray-200 text-gray-700{% endif %}">
+                {{ m.label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Summary Banner -->
+    {% if total_amount > 0 %}
+    <div class="bg-gradient-to-r {% if view_type == 'receive' %}from-blue-500 to-indigo-500{% else %}from-red-500 to-orange-500{% endif %} rounded-xl shadow-lg p-6 text-white">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-white/80 text-sm">
+                    {{ filter_label }} -
+                    {% if view_type == 'receive' %}Tổng tiền cần trả lại{% else %}Tổng tiền chưa thanh toán{% endif %}
+                </p>
+                <p class="text-4xl font-bold mt-1">{{ total_amount | format_currency }}</p>
+                <p class="text-white/80 text-sm mt-2">{{ people_count }} người</p>
+            </div>
+            <div class="bg-white/20 p-4 rounded-full">
+                {% if view_type == 'receive' %}
+                <i class="fas fa-wallet text-3xl"></i>
+                {% else %}
+                <i class="fas fa-coins text-3xl"></i>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- List -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        {% if details and details | length > 0 %}
+        <div class="divide-y">
+            {% for player_name, info in details.items() %}
+            <div class="p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 {% if view_type == 'receive' %}bg-blue-100{% else %}bg-red-100{% endif %} rounded-full flex items-center justify-center mr-4">
+                            <span class="{% if view_type == 'receive' %}text-blue-700{% else %}text-red-700{% endif %} font-bold text-lg">{{ player_name[0] }}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-lg">{{ player_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ info.sessions | length }} buổi</p>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold {% if view_type == 'receive' %}text-blue-600{% else %}text-red-600{% endif %}">
+                        {% if view_type == 'receive' %}+{% endif %}{{ info[amount_field] | format_currency }}
+                    </p>
+                </div>
+
+                <!-- Chi tiết từng buổi -->
+                <div class="mt-4 ml-16">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-500">
+                                    <th class="text-left py-1">Ngày</th>
+                                    {% if view_type == 'receive' %}
+                                    <th class="text-right py-1">Đã trả trước</th>
+                                    <th class="text-right py-1">Được nhận lại</th>
+                                    <th class="text-left py-1">Ghi chú</th>
+                                    {% else %}
+                                    <th class="text-right py-1">Phải trả</th>
+                                    <th class="text-right py-1">Đã trả</th>
+                                    <th class="text-right py-1">Chưa thanh toán</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in info.sessions %}
+                                <tr class="border-t border-gray-200">
+                                    <td class="py-2">
+                                        <a href="/sessions/{{ s.session_id }}" class="text-green-600 hover:underline">
+                                            {{ s.date | format_date }}
+                                        </a>
+                                    </td>
+                                    {% if view_type == 'receive' %}
+                                    <td class="text-right py-2">{{ s.amount_pre_paid | format_currency }}</td>
+                                    <td class="text-right py-2 text-blue-600 font-medium">+{{ s.amount_to_receive | format_currency }}</td>
+                                    <td class="py-2 text-gray-500">{{ s.note or '' }}</td>
+                                    {% else %}
+                                    <td class="text-right py-2">{{ s.amount_due | format_currency }}</td>
+                                    <td class="text-right py-2 text-green-600">{{ s.amount_paid | format_currency }}</td>
+                                    <td class="text-right py-2 text-red-600 font-medium">{{ s. owed | format_currency }}</td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            {% if view_type == 'receive' %}
+            <i class="fas fa-wallet text-5xl text-gray-400 mb-4"></i>
+            <p class="text-lg">Không có ai cần nhận lại tiền trong {{ filter_label | lower }}! </p>
+            {% else %}
+            <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+            <p class="text-lg">Không còn ai chưa thanh toán trong {{ filter_label | lower }}!  🎉</p>
+            {% endif %}
+            {% if selected_month %}
+            <a href="/debts? type={{ view_type }}" class="mt-4 inline-block text-green-600 hover:underline">
+                Xem tất cả các tháng
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

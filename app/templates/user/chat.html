@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat AI - Badminton Tracker{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="gradient-bg text-white p-4">
+            <h1 class="text-xl font-bold">
+                <i class="fas fa-robot mr-2"></i>Trợ lý AI Cầu Lông
+            </h1>
+            <p class="text-green-100 text-sm">Hỏi bất cứ điều gì về các buổi chơi cầu lông! </p>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="h-[28rem] overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <!-- Welcome message -->
+            <div class="flex items-start">
+                <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow max-w-md">
+                    <p class="text-gray-800">
+                        Xin chào! 👋 Tôi có thể giúp bạn tra cứu thông tin các buổi chơi cầu lông.
+                    </p>
+                    <p class="text-gray-600 mt-2 text-sm">Ví dụ:</p>
+                    <ul class="text-sm text-gray-600 mt-1 space-y-1">
+                        <li>• "Ly còn thiếu bao nhiêu tiền tháng 11?"</li>
+                        <li>• "Nguyên đã chơi những buổi nào?"</li>
+                        <li>• "Ai còn chưa thanh toán tiền?"</li>
+                        <li>• "Tổng chi phí tháng 11 là bao nhiêu?"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="border-t p-4 bg-white">
+            <form id="chat-form" class="flex space-x-3">
+                <input
+                    type="text"
+                    id="message-input"
+                    class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Nhập câu hỏi của bạn..."
+                    autocomplete="off"
+                >
+                <button
+                    type="submit"
+                    class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center"
+                >
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Gửi
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick questions -->
+    <div class="mt-4">
+        <p class="text-sm text-gray-500 mb-2">Câu hỏi gợi ý:</p>
+        <div class="flex flex-wrap gap-2">
+            <button onclick="askQuestion('Ai còn chưa thanh toán tiền tháng 11? ')"
+                    class="bg-white px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border shadow-sm transition">
+                Ai còn chưa thanh toán tiền tháng 11?
+            </button>
+            <button onclick="askQuestion('Ly đã chơi những buổi nào trong tháng 11? ')"
+                    class="bg-white px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border shadow-sm transition">
+                Buổi chơi của Ly tháng 11
+            </button>
+            <button onclick="askQuestion('Tổng chi phí tháng 11 là bao nhiêu?')"
+                    class="bg-white px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border shadow-sm transition">
+                Tổng chi phí tháng 11
+            </button>
+            <button onclick="askQuestion('Nguyên còn thiếu bao nhiêu?')"
+                    class="bg-white px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border shadow-sm transition">
+                Nguyên còn thiếu bao nhiêu?
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const messageInput = document. getElementById('message-input');
+
+function addMessage(content, isUser = false) {
+    const div = document.createElement('div');
+    div.className = `flex items-start ${isUser ? 'justify-end' : ''}`;
+
+    const avatar = isUser ? '' : `
+        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+            <i class="fas fa-robot text-white text-sm"></i>
+        </div>
+    `;
+
+    const bubbleClass = isUser
+        ? 'bg-green-600 text-white rounded-lg p-4 max-w-md ml-auto'
+        : 'bg-white rounded-lg p-4 shadow max-w-md';
+
+    div.innerHTML = `
+        ${avatar}
+        <div class="${bubbleClass}">
+            <div class="whitespace-pre-wrap">${content}</div>
+        </div>
+        ${isUser ? '<div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center ml-3 flex-shrink-0"><i class="fas fa-user text-gray-600 text-sm"></i></div>' : ''}
+    `;
+
+    chatMessages. appendChild(div);
+    chatMessages.scrollTop = chatMessages. scrollHeight;
+}
+
+function addLoading() {
+    const div = document.createElement('div');
+    div.id = 'loading';
+    div.className = 'flex items-start';
+    div.innerHTML = `
+        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+            <i class="fas fa-robot text-white text-sm"></i>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow">
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeLoading() {
+    const loading = document.getElementById('loading');
+    if (loading) loading.remove();
+}
+
+function formatResponse(text) {
+    // Convert markdown-style bold to HTML
+    text = text.replace(/\*\*(.*? )\*\*/g, '<strong>$1</strong>');
+    // Convert line breaks
+    text = text. replace(/\n/g, '<br>');
+    return text;
+}
+
+async function askQuestion(message) {
+    messageInput.value = message;
+    await sendMessage(message);
+}
+
+async function sendMessage(message) {
+    if (! message.trim()) return;
+
+    addMessage(message, true);
+    messageInput.value = '';
+    messageInput.focus();
+    addLoading();
+
+    try {
+        const response = await fetch('/chat/ask', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message})
+        });
+
+        const data = await response.json();
+        removeLoading();
+        addMessage(formatResponse(data.answer));
+
+    } catch (error) {
+        removeLoading();
+        addMessage('Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.  😅');
+    }
+}
+
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await sendMessage(messageInput.value);
+});
+
+// Focus input on load
+messageInput.focus();
+</script>
+{% endblock %}

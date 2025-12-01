@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang chủ - Badminton Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-chart-line mr-2 text-green-600"></i>
+            Tổng quan
+        </h1>
+        <a href="/chat" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-robot mr-2"></i>Hỏi AI
+        </a>
+    </div>
+
+    <!-- Tổng nợ & Nhận lại -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Tổng chưa thanh toán -->
+        {% if total_owed_all_time. total_owed > 0 %}
+        <div class="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-white/80 text-sm">💰 Tổng tiền chưa thanh toán</p>
+                    <p class="text-3xl font-bold mt-1">{{ total_owed_all_time.total_owed | format_currency }}</p>
+                    <p class="text-white/80 text-sm mt-2">{{ total_owed_all_time. people_count }} người chưa thanh toán</p>
+                </div>
+                <div class="bg-white/20 p-4 rounded-full">
+                    <i class="fas fa-hand-holding-usd text-2xl"></i>
+                </div>
+            </div>
+            <a href="/debts" class="inline-flex items-center mt-3 text-white/90 hover:text-white text-sm">
+                Xem chi tiết <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+        {% else %}
+        <div class="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-white/80 text-sm">💰 Tổng tiền chưa thanh toán</p>
+                    <p class="text-3xl font-bold mt-1">0đ</p>
+                    <p class="text-white/80 text-sm mt-2">Không còn ai chưa thanh toán!  🎉</p>
+                </div>
+                <div class="bg-white/20 p-4 rounded-full">
+                    <i class="fas fa-check-circle text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tổng tiền cần trả lại -->
+        {% if total_to_receive_all_time and total_to_receive_all_time. total_to_receive > 0 %}
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-white/80 text-sm">💸 Tổng tiền cần trả lại</p>
+                    <p class="text-3xl font-bold mt-1">{{ total_to_receive_all_time. total_to_receive | format_currency }}</p>
+                    <p class="text-white/80 text-sm mt-2">{{ total_to_receive_all_time.people_count }} người được nhận</p>
+                </div>
+                <div class="bg-white/20 p-4 rounded-full">
+                    <i class="fas fa-wallet text-2xl"></i>
+                </div>
+            </div>
+            <a href="/debts? type=receive" class="inline-flex items-center mt-3 text-white/90 hover:text-white text-sm">
+                Xem chi tiết <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+        {% else %}
+        <div class="bg-gradient-to-r from-gray-400 to-gray-500 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-white/80 text-sm">💸 Tổng tiền cần trả lại</p>
+                    <p class="text-3xl font-bold mt-1">0đ</p>
+                    <p class="text-white/80 text-sm mt-2">Không có ai cần nhận lại</p>
+                </div>
+                <div class="bg-white/20 p-4 rounded-full">
+                    <i class="fas fa-wallet text-2xl"></i>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Filter: Tháng có nợ -->
+    {% if months_with_debts %}
+    <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="text-sm font-medium text-gray-500 mb-3">
+            <i class="fas fa-calendar-exclamation mr-1"></i>Tháng có tiền chưa thanh toán:
+        </h3>
+        <div class="flex flex-wrap gap-2">
+            {% for m in months_with_debts[:6] %}
+            <a href="/debts? year={{ m. year }}&month={{ m.month }}"
+               class="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm">
+                <span class="font-medium">{{ m.label }}</span>
+                <span class="ml-2 bg-red-200 text-red-800 px-2 py-0.5 rounded-full text-xs">
+                    {{ m.total_owed | format_currency }}
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- So sánh 2 tháng gần nhất -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Tháng trước -->
+        <div class="bg-white rounded-xl shadow p-5 {% if prev_summary.total_owed > 0 %}ring-2 ring-red-200{% endif %}">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-800">
+                    <i class="fas fa-calendar mr-2 text-blue-500"></i>
+                    Tháng {{ prev_month_str }}
+                </h3>
+                {% if prev_summary. total_owed > 0 %}
+                <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Chưa thanh toán</span>
+                {% else %}
+                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Đã xong</span>
+                {% endif %}
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-500 text-xs">Số buổi</p>
+                    <p class="text-xl font-bold text-gray-800">{{ prev_summary.sessions_count }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs">Tổng chi phí</p>
+                    <p class="text-xl font-bold text-gray-800">{{ prev_summary.total_cost | format_currency }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs">Chưa thanh toán</p>
+                    <p class="text-xl font-bold {% if prev_summary. total_owed > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                        {{ prev_summary.total_owed | format_currency }}
+                    </p>
+                </div>
+                <div>
+                    <a href="/sessions? year={{ prev_summary.year }}&month={{ prev_summary. month }}"
+                       class="text-green-600 hover:underline text-sm">
+                        Xem chi tiết →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tháng hiện tại -->
+        <div class="bg-white rounded-xl shadow p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-800">
+                    <i class="fas fa-calendar-day mr-2 text-green-500"></i>
+                    Tháng {{ current_month }} (hiện tại)
+                </h3>
+                {% if current_summary.sessions_count == 0 %}
+                <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Chưa có buổi</span>
+                {% endif %}
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-500 text-xs">Số buổi</p>
+                    <p class="text-xl font-bold text-gray-800">{{ current_summary.sessions_count }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs">Tổng chi phí</p>
+                    <p class="text-xl font-bold text-gray-800">{{ current_summary.total_cost | format_currency }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-xs">Chưa thanh toán</p>
+                    <p class="text-xl font-bold {% if current_summary.total_owed > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                        {{ current_summary. total_owed | format_currency }}
+                    </p>
+                </div>
+                <div>
+                    <a href="/sessions?year={{ current_summary. year }}&month={{ current_summary.month }}"
+                       class="text-green-600 hover:underline text-sm">
+                        Xem chi tiết →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Người còn chưa thanh toán -->
+        <div class="bg-white rounded-xl shadow">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-user-clock mr-2 text-red-500"></i>
+                    Người chưa thanh toán
+                </h2>
+                <a href="/debts" class="text-green-600 hover:underline text-sm">Xem tất cả →</a>
+            </div>
+            <div class="p-4">
+                {% if all_time_debts and all_time_debts | length > 0 %}
+                <div class="space-y-3">
+                    {% for debt in all_time_debts[:5] %}
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-red-600 font-semibold">{{ debt._id[0] }}</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ debt._id }}</p>
+                                <p class="text-sm text-gray-500">{{ debt.sessions_count }} buổi</p>
+                            </div>
+                        </div>
+                        <span class="text-red-600 font-semibold">{{ debt.total_owed | format_currency }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                    <p>Không còn ai chưa thanh toán!  🎉</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Người được nhận lại tiền -->
+        <div class="bg-white rounded-xl shadow">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-hand-holding-usd mr-2 text-blue-500"></i>
+                    Người được nhận lại tiền
+                </h2>
+                <a href="/debts?type=receive" class="text-green-600 hover:underline text-sm">Xem tất cả →</a>
+            </div>
+            <div class="p-4">
+                {% if all_time_to_receive and all_time_to_receive | length > 0 %}
+                <div class="space-y-3">
+                    {% for item in all_time_to_receive[:5] %}
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-semibold">{{ item._id[0] }}</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ item._id }}</p>
+                                <p class="text-sm text-gray-500">{{ item.sessions_count }} buổi</p>
+                            </div>
+                        </div>
+                        <span class="text-blue-600 font-semibold">+{{ item.total_to_receive | format_currency }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-wallet text-4xl text-gray-400 mb-2"></i>
+                    <p>Không có ai cần nhận lại tiền</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Buổi chơi gần đây -->
+    <div class="bg-white rounded-xl shadow">
+        <div class="p-4 border-b flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-history mr-2 text-purple-500"></i>
+                Buổi chơi gần đây
+            </h2>
+            <a href="/sessions" class="text-green-600 hover:underline text-sm">Xem tất cả →</a>
+        </div>
+        <div class="p-4">
+            {% if recent_sessions %}
+            <div class="space-y-3">
+                {% for session in recent_sessions %}
+                <a href="/sessions/{{ session._id }}" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-medium text-gray-800">{{ session. date | format_date }}</p>
+                            <p class="text-sm text-gray-500">{{ session.court. name or 'Sân cầu lông' }}</p>
+                            <p class="text-xs text-gray-400">{{ session.participants | length }} người tham gia</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-green-600 font-semibold">{{ session.total_cost | format_currency }}</span>
+                            {% set unpaid = namespace(count=0) %}
+                            {% for p in session.participants %}
+                                {% if not p.is_paid and (p.amount_to_receive | default(0)) == 0 %}
+                                    {% set unpaid. count = unpaid.count + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if unpaid. count > 0 %}
+                            <p class="text-xs text-red-500 mt-1">{{ unpaid.count }} người chưa trả</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-calendar-times text-4xl mb-2"></i>
+                <p>Chưa có buổi chơi nào</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

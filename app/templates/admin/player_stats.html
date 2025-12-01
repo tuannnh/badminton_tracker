@@ -1,0 +1,110 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Thống kê {{ player.name }} - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                <span class="text-green-700 font-bold text-xl">{{ player.name[0] }}</span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">{{ player. name }}</h1>
+                <p class="text-gray-500">{{ player.phone or '' }} {{ player.email or '' }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('admin.players') }}" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-arrow-left mr-1"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="bg-white rounded-xl shadow p-4">
+        <form method="GET" class="flex items-center gap-3">
+            <select name="month" class="border rounded-lg px-3 py-2">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>Tháng {{ m }}</option>
+                {% endfor %}
+            </select>
+            <select name="year" class="border rounded-lg px-3 py-2">
+                {% for y in range(2024, 2027) %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                <i class="fas fa-filter mr-1"></i>Xem
+            </button>
+        </form>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl shadow p-5">
+            <p class="text-gray-500 text-sm">Số buổi chơi</p>
+            <p class="text-2xl font-bold text-gray-800">{{ debt_info.sessions_count if debt_info else 0 }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+            <p class="text-gray-500 text-sm">Tổng phải trả</p>
+            <p class="text-2xl font-bold text-gray-800">{{ (debt_info.total_due if debt_info else 0) | format_currency }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+            <p class="text-gray-500 text-sm">Đã trả</p>
+            <p class="text-2xl font-bold text-green-600">{{ (debt_info.total_paid if debt_info else 0) | format_currency }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-5">
+            <p class="text-gray-500 text-sm">Chưa thanh toán</p>
+            <p class="text-2xl font-bold text-red-600">{{ (debt_info.total_owed if debt_info else 0) | format_currency }}</p>
+        </div>
+    </div>
+
+    <!-- Sessions -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        <div class="p-4 border-b">
+            <h2 class="font-semibold text-gray-800">Các buổi chơi tháng {{ selected_month }}/{{ selected_year }}</h2>
+        </div>
+        {% if sessions %}
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sân</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Phải trả</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Đã trả</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for session in sessions %}
+                    {% set participant = session.participants | selectattr('player_name', 'equalto', player.name) | first %}
+                    {% if participant %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <a href="{{ url_for('admin.session_detail', session_id=session._id) }}" class="text-green-600 hover:underline font-medium">
+                                {{ session. date | format_date }}
+                            </a>
+                        </td>
+                        <td class="px-4 py-3 text-gray-600">{{ session.court. name or 'N/A' }}</td>
+                        <td class="px-4 py-3 text-right">{{ participant.amount_due | format_currency }}</td>
+                        <td class="px-4 py-3 text-right text-green-600">{{ participant.amount_paid | format_currency }}</td>
+                        <td class="px-4 py-3 text-center">
+                            {% if participant. is_paid %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Đã trả</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Chưa thanh toán {{ (participant.amount_due - participant.amount_paid) | format_currency }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-calendar-times text-4xl mb-2"></i>
+            <p>Không có buổi chơi nào trong tháng này</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

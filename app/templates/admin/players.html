@@ -1,0 +1,169 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Quản lý người chơi - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Quản lý người chơi</h1>
+        <button onclick="openAddModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-plus mr-2"></i>Thêm người chơi
+        </button>
+    </div>
+
+    <!-- Players List -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Điện thoại</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Vai trò</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                    <th class="px-6 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for player in players %}
+                <tr class="hover:bg-gray-50 {% if not player.is_active %}opacity-50{% endif %}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-green-700 font-semibold">{{ player.name[0] }}</span>
+                            </div>
+                            <span class="font-medium text-gray-800">{{ player.name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600">{{ player.phone or '-' }}</td>
+                    <td class="px-6 py-4 text-gray-600">{{ player.email or '-' }}</td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex flex-wrap justify-center gap-1">
+                            {% if player.is_admin %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Admin</span>
+                            {% endif %}
+                            {% if player.is_default_court_payer %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Trả sân</span>
+                            {% endif %}
+                            {% if player.is_default_shuttlecock_payer %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Trả cầu</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        {% if player.is_active %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Hoạt động</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Đã xóa</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <button onclick="openEditModal('{{ player._id }}', '{{ player.name }}', '{{ player. phone or '' }}', '{{ player.email or '' }}', {{ player.is_default_court_payer | tojson }}, {{ player.is_default_shuttlecock_payer | tojson }}, {{ player.is_admin | tojson }})"
+                                class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        {% if player.is_active %}
+                        <form method="POST" action="{{ url_for('admin.player_delete', player_id=player._id) }}"
+                              class="inline" onsubmit="return confirm('Bạn có chắc muốn xóa người chơi này? ')">
+                            <button type="submit" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="playerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+        <h3 id="modalTitle" class="text-lg font-semibold mb-4">Thêm người chơi</h3>
+        <form id="playerForm" method="POST">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tên *</label>
+                    <input type="text" name="name" id="input_name" required
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Điện thoại</label>
+                    <input type="text" name="phone" id="input_phone"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" id="input_email"
+                           class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_default_court_payer" id="input_court_payer"
+                               class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                        <span class="ml-2 text-gray-700">Người mặc định trả tiền sân</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_default_shuttlecock_payer" id="input_shuttlecock_payer"
+                               class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                        <span class="ml-2 text-gray-700">Người mặc định trả tiền cầu</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_admin" id="input_admin"
+                               class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                        <span class="ml-2 text-gray-700">Admin</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closePlayerModal()"
+                        class="px-4 py-2 border rounded-lg hover:bg-gray-50">Hủy</button>
+                <button type="submit"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Thêm người chơi';
+    document.getElementById('playerForm').action = '{{ url_for("admin.player_new") }}';
+    document.getElementById('input_name').value = '';
+    document.getElementById('input_phone').value = '';
+    document.getElementById('input_email'). value = '';
+    document.getElementById('input_court_payer').checked = false;
+    document. getElementById('input_shuttlecock_payer').checked = false;
+    document.getElementById('input_admin'). checked = false;
+    showModal();
+}
+
+function openEditModal(id, name, phone, email, courtPayer, shuttlecockPayer, isAdmin) {
+    document.getElementById('modalTitle').textContent = 'Sửa thông tin người chơi';
+    document.getElementById('playerForm').action = '/admin/players/' + id + '/edit';
+    document.getElementById('input_name').value = name;
+    document. getElementById('input_phone').value = phone;
+    document.getElementById('input_email'). value = email;
+    document.getElementById('input_court_payer').checked = courtPayer;
+    document.getElementById('input_shuttlecock_payer').checked = shuttlecockPayer;
+    document.getElementById('input_admin').checked = isAdmin;
+    showModal();
+}
+
+function showModal() {
+    document.getElementById('playerModal').classList.remove('hidden');
+    document.getElementById('playerModal').classList.add('flex');
+}
+
+function closePlayerModal() {
+    document.getElementById('playerModal').classList.add('hidden');
+    document.getElementById('playerModal').classList.remove('flex');
+}
+
+document.getElementById('playerModal').addEventListener('click', function(e) {
+    if (e.target === this) closePlayerModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Thanh toán nhanh - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-bolt mr-2 text-yellow-500"></i>Thanh toán nhanh
+        </h1>
+    </div>
+
+    <!-- Toggle giữa Nợ và Nhận lại -->
+    <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex space-x-4">
+            <a href="{{ url_for('admin.quick_payment') }}"
+               class="flex-1 text-center py-3 rounded-lg transition {% if view_type != 'receive' %}bg-red-100 text-red-700 font-medium{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                <i class="fas fa-user-clock mr-2"></i>Người còn chưa thanh toán ({{ debt_details | length }})
+            </a>
+            <a href="{{ url_for('admin.quick_payment') }}?type=receive"
+               class="flex-1 text-center py-3 rounded-lg transition {% if view_type == 'receive' %}bg-blue-100 text-blue-700 font-medium{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                <i class="fas fa-hand-holding-usd mr-2"></i>Người được nhận lại ({{ receive_details | length }})
+            </a>
+        </div>
+    </div>
+
+    {% if view_type == 'receive' %}
+    <!-- Danh sách người được nhận lại -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        <div class="p-4 border-b bg-blue-50">
+            <h2 class="font-semibold text-gray-800">
+                <i class="fas fa-wallet mr-2 text-blue-500"></i>
+                Danh sách người được nhận lại tiền
+            </h2>
+        </div>
+
+        {% if receive_details %}
+        <div class="divide-y">
+            {% for player_name, info in receive_details. items() %}
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                            <span class="text-blue-700 font-bold text-lg">{{ player_name[0] }}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-lg">{{ player_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ info.sessions | length }} buổi</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-blue-600">+{{ info.total_to_receive | format_currency }}</p>
+                        <form method="POST" action="{{ url_for('admin.mark_received') }}" class="mt-2">
+                            <input type="hidden" name="player_name" value="{{ player_name }}">
+                            <button type="submit"
+                                    onclick="return confirm('Xác nhận đã trả lại {{ info.total_to_receive | format_currency }} cho {{ player_name }}?')"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                                <i class="fas fa-check mr-1"></i>Đã trả lại
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Chi tiết từng buổi -->
+                <div class="mt-4 pl-16">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-500">
+                                    <th class="text-left py-1">Ngày</th>
+                                    <th class="text-right py-1">Đã trả trước</th>
+                                    <th class="text-right py-1">Được nhận lại</th>
+                                    <th class="text-left py-1">Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in info.sessions %}
+                                <tr class="border-t border-gray-200">
+                                    <td class="py-2">
+                                        <a href="{{ url_for('admin.session_detail', session_id=s. session_id) }}"
+                                           class="text-green-600 hover:underline">
+                                            {{ s.date | format_date }}
+                                        </a>
+                                    </td>
+                                    <td class="text-right py-2">{{ s.amount_pre_paid | format_currency }}</td>
+                                    <td class="text-right py-2 text-blue-600 font-medium">+{{ s.amount_to_receive | format_currency }}</td>
+                                    <td class="py-2 text-gray-500">{{ s.note or '' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-wallet text-5xl text-gray-400 mb-4"></i>
+            <p class="text-lg">Không có ai cần nhận lại tiền! </p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <!-- Danh sách người còn chưa thanh toán -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        <div class="p-4 border-b bg-red-50">
+            <h2 class="font-semibold text-gray-800">
+                <i class="fas fa-user-clock mr-2 text-red-500"></i>
+                Danh sách người còn chưa thanh toán
+            </h2>
+        </div>
+
+        {% if debt_details %}
+        <div class="divide-y">
+            {% for player_name, info in debt_details.items() %}
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                            <span class="text-red-700 font-bold text-lg">{{ player_name[0] }}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-lg">{{ player_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ info.sessions | length }} buổi chưa thanh toán</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-red-600">{{ info.total_owed | format_currency }}</p>
+                        <form method="POST" action="{{ url_for('admin. mark_all_paid') }}" class="mt-2">
+                            <input type="hidden" name="player_name" value="{{ player_name }}">
+                            <button type="submit"
+                                    onclick="return confirm('Xác nhận {{ player_name }} đã trả hết {{ info.total_owed | format_currency }}?')"
+                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                                <i class="fas fa-check mr-1"></i>Đã trả hết
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Chi tiết từng buổi -->
+                <div class="mt-4 pl-16">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-500">
+                                    <th class="text-left py-1">Ngày</th>
+                                    <th class="text-right py-1">Phải trả</th>
+                                    <th class="text-right py-1">Đã trả</th>
+                                    <th class="text-right py-1">Còn chưa thanh toán</th>
+                                    <th class="text-right py-1"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in info.sessions %}
+                                <tr class="border-t border-gray-200">
+                                    <td class="py-2">
+                                        <a href="{{ url_for('admin.session_detail', session_id=s.session_id) }}"
+                                           class="text-green-600 hover:underline">
+                                            {{ s.date | format_date }}
+                                        </a>
+                                    </td>
+                                    <td class="text-right py-2">{{ s.amount_due | format_currency }}</td>
+                                    <td class="text-right py-2 text-green-600">{{ s.amount_paid | format_currency }}</td>
+                                    <td class="text-right py-2 text-red-600 font-medium">{{ s. owed | format_currency }}</td>
+                                    <td class="text-right py-2">
+                                        <form method="POST" action="{{ url_for('admin.mark_paid', session_id=s. session_id, player_name=player_name) }}" class="inline">
+                                            <button type="submit" class="text-green-600 hover:text-green-800 text-xs">
+                                                <i class="fas fa-check"></i> Đã trả
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+            <p class="text-lg">Không còn ai chưa thanh toán!  🎉</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

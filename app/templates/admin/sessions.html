@@ -1,0 +1,98 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Quản lý buổi chơi - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Quản lý buổi chơi</h1>
+        <a href="{{ url_for('admin.session_new') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-plus mr-2"></i>Thêm buổi chơi
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="bg-white rounded-xl shadow p-4">
+        <form method="GET" class="flex items-center gap-3">
+            <select name="month" class="border rounded-lg px-3 py-2">
+                {% for m in range(1, 13) %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>Tháng {{ m }}</option>
+                {% endfor %}
+            </select>
+            <select name="year" class="border rounded-lg px-3 py-2">
+                {% for y in range(2024, 2027) %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                <i class="fas fa-filter mr-1"></i>Lọc
+            </button>
+        </form>
+    </div>
+
+    <!-- Summary -->
+    <div class="grid grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+            <p class="text-gray-500 text-sm">Số buổi</p>
+            <p class="text-xl font-bold">{{ summary.sessions_count }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+            <p class="text-gray-500 text-sm">Tổng chi phí</p>
+            <p class="text-xl font-bold text-green-600">{{ summary.total_cost | format_currency }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+            <p class="text-gray-500 text-sm">Tiền sân</p>
+            <p class="text-xl font-bold">{{ summary.total_court | format_currency }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 text-center">
+            <p class="text-gray-500 text-sm">Chưa thanh toán</p>
+            <p class="text-xl font-bold text-red-600">{{ summary.total_owed | format_currency }}</p>
+        </div>
+    </div>
+
+    <!-- Sessions Table -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        {% if sessions %}
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sân</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Người chơi</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tổng tiền</th>
+                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
+                    <th class="px-4 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for session in sessions %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">{{ session.date | format_date }}</td>
+                    <td class="px-4 py-3 text-gray-600">{{ session.court. name or 'N/A' }}</td>
+                    <td class="px-4 py-3 text-center">{{ session.participants | length }}</td>
+                    <td class="px-4 py-3 text-right font-semibold text-green-600">{{ session.total_cost | format_currency }}</td>
+                    <td class="px-4 py-3 text-center">
+                        {% set unpaid = session.participants | selectattr('is_paid', 'false') | list | length %}
+                        {% if unpaid == 0 %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Đủ</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">{{ unpaid }} chưa thanh toán</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-right space-x-2">
+                        <a href="{{ url_for('admin.session_detail', session_id=session._id) }}" class="text-blue-600 hover:underline">Chi tiết</a>
+                        <a href="{{ url_for('admin.session_edit', session_id=session._id) }}" class="text-green-600 hover:underline">Sửa</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-calendar-times text-4xl mb-4"></i>
+            <p>Chưa có buổi chơi nào trong tháng này</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
