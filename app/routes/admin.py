@@ -477,7 +477,7 @@ def quick_payment():
     receive_details = Session.get_all_to_receive_with_details()
     players = Player.find_all()
 
-    return render_template('admin/quick_payment. html',
+    return render_template('admin/quick_payment.html',
                            debt_details=debt_details,
                            receive_details=receive_details,
                            players=players,
