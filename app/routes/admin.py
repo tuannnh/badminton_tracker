@@ -421,7 +421,13 @@ def session_detail(session_id):
         flash('Không tìm thấy buổi chơi', 'error')
         return redirect(url_for('admin.sessions'))
 
-    return render_template('admin/session_detail.html', session_data=session_doc)
+    # Get players info for short_code lookup
+    players = Player.find_all(active_only=False)
+    players_by_id = {str(p['_id']): p for p in players}
+
+    return render_template('admin/session_detail.html',
+                           session_data=session_doc,
+                           players_by_id=players_by_id)
 
 
 @admin_bp.route('/sessions/<session_id>/delete', methods=['POST'])
@@ -477,10 +483,14 @@ def quick_payment():
     receive_details = Session.get_all_to_receive_with_details()
     players = Player.find_all()
 
+    # Create a lookup dict by player name for short_code
+    players_by_name = {p['name']: p for p in players}
+
     return render_template('admin/quick_payment.html',
                            debt_details=debt_details,
                            receive_details=receive_details,
                            players=players,
+                           players_by_name=players_by_name,
                            view_type=view_type)
 
 

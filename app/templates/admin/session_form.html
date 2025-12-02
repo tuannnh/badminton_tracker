@@ -117,17 +117,28 @@
         <!-- Người tham gia -->
         <div class="bg-white rounded-xl shadow p-6">
             <h2 class="text-lg font-semibold mb-4"><i class="fas fa-users mr-2 text-green-500"></i>Người tham gia *</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            
+            <!-- Search input -->
+            <div class="mb-3">
+                <input type="text" 
+                       id="player-search" 
+                       placeholder="🔍 Tìm kiếm theo tên..."
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+            </div>
+            
+            <div id="player-list" class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
                 {% for player in players %}
-                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                <label class="player-item flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                       data-name="{{ player.name.lower() }}">
                     <input type="checkbox" name="participants" value="{{ player._id }}"
                            {% if session_data %}
-                               {% for p in session_data. participants %}
-                                   {% if p. player_id == player._id %}checked{% endif %}
+                               {% for p in session_data.participants %}
+                                   {% if p.player_id == player._id %}checked{% endif %}
                                {% endfor %}
                            {% endif %}
                            class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
                     <span class="ml-2 text-gray-700">{{ player.name }}</span>
+                    <span class="text-xs text-gray-400 ml-1">({{ player.short_code or 'N/A' }})</span>
                 </label>
                 {% endfor %}
             </div>
@@ -150,4 +161,20 @@
         </div>
     </form>
 </div>
+
+<script>
+document.getElementById('player-search').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const playerItems = document.querySelectorAll('.player-item');
+    
+    playerItems.forEach(item => {
+        const name = item.dataset.name;
+        if (name.includes(searchTerm) || searchTerm === '') {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+</script>
 {% endblock %}

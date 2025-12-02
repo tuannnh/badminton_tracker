@@ -131,17 +131,20 @@
             <i class="fas fa-exchange-alt mr-2 text-purple-500"></i>Tóm tắt thanh toán
         </h3>
         <div class="space-y-2">
-            {% set court_payer = session.court. paid_by.player_name %}
+            {% set court_payer = session.court.paid_by.player_name %}
             {% set shuttlecock_payer = session.shuttlecock.paid_by.player_name %}
 
             {% for p in session.participants %}
-                {% set to_receive = p. amount_to_receive | default(0) %}
+                {% set to_receive = p.amount_to_receive | default(0) %}
                 {% set still_owed = p.amount_due - p.amount_paid if not p.is_paid and to_receive == 0 else 0 %}
+                {% set player_info = players_by_id.get(p.player_id | string, {}) %}
+                {% set short_code = player_info.get('short_code', 'N/A') %}
 
                 {% if still_owed > 0 %}
                 <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                     <div class="flex items-center">
                         <span class="font-medium text-gray-800">{{ p.player_name }}</span>
+                        <span class="text-xs text-gray-400 ml-1">({{ short_code }})</span>
                         <i class="fas fa-arrow-right mx-3 text-gray-400"></i>
                         <span class="text-gray-600">
                             {% if court_payer == shuttlecock_payer %}
@@ -153,7 +156,7 @@
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="font-semibold text-red-600">{{ still_owed | format_currency }}</span>
-                        <button onclick="showQRModal('{{ p.player_name }}', {{ still_owed }}, '{{ p.player_name }} - thanh toan cau long - {{ session.date | format_date }}')"
+                        <button onclick="showQRModal('{{ p.player_name }}', {{ still_owed }}, '{{ session.date.strftime('%d%m%Y') }}', '{{ short_code }}')"
                                 class="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 text-sm transition">
                             <i class="fas fa-qrcode mr-1"></i>QR
                         </button>
@@ -291,7 +294,18 @@ function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
 }
 
-function showQRModal(playerName, amount, description) {
+function removeDiacritics(str) {
+    return str.normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/đ/g, 'd')
+              .replace(/Đ/g, 'D');
+}
+
+function showQRModal(playerName, amount, sessionDate, shortCode) {
+    // Format: Manh thanh toan cau long - 28122025 - P001
+    const nameNoDiacritics = removeDiacritics(playerName);
+    const description = `${nameNoDiacritics} thanh toan cau long - ${sessionDate} - ${shortCode}`;
+    
     const encodedDesc = encodeURIComponent(description);
     const encodedName = encodeURIComponent(VIETQR_CONFIG.accountName);
     
