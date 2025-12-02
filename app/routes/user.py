@@ -100,7 +100,13 @@ def session_detail(session_id):
     if not session:
         return "Session not found", 404
 
-    return render_template('user/session_detail.html', session=session)
+    # Get players info for short_code lookup
+    players = Player.find_all(active_only=False)
+    players_by_id = {str(p['_id']): p for p in players}
+
+    return render_template('user/session_detail.html',
+                           session=session,
+                           players_by_id=players_by_id)
 
 
 @user_bp.route('/debts')
@@ -139,13 +145,17 @@ def debts():
             details = Session.get_debts_with_details_by_month(year, month)
         else:
             data_list = Session.get_all_debts_all_time()
-            details = Session. get_all_debts_with_details()
+            details = Session.get_all_debts_with_details()
 
         total_amount = sum(d['total_owed'] for d in data_list)
         page_title = "Người còn chưa thanh toán"
         amount_field = 'total_owed'
 
     months_with_debts = Session.get_months_with_debts()
+
+    # Get players info for short_code lookup
+    players = Player.find_all(active_only=False)
+    players_by_name = {p['name']: p for p in players}
 
     return render_template('user/debts.html',
                            data_list=data_list,
@@ -158,4 +168,5 @@ def debts():
                            months_with_debts=months_with_debts,
                            view_type=view_type,
                            page_title=page_title,
-                           amount_field=amount_field)
+                           amount_field=amount_field,
+                           players_by_name=players_by_name)

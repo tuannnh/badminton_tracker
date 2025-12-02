@@ -79,6 +79,8 @@
         {% if details and details | length > 0 %}
         <div class="divide-y">
             {% for player_name, info in details.items() %}
+            {% set player_info = players_by_name.get(player_name, {}) %}
+            {% set short_code = player_info.get('short_code', 'N/A') %}
             <div class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
@@ -86,7 +88,7 @@
                             <span class="{% if view_type == 'receive' %}text-blue-700{% else %}text-red-700{% endif %} font-bold text-lg">{{ player_name[0] }}</span>
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-800 text-lg">{{ player_name }}</h3>
+                            <h3 class="font-semibold text-gray-800 text-lg">{{ player_name }} <span class="text-xs text-gray-400">({{ short_code }})</span></h3>
                             <p class="text-sm text-gray-500">{{ info.sessions | length }} buổi</p>
                         </div>
                     </div>
@@ -95,7 +97,7 @@
                             {% if view_type == 'receive' %}+{% endif %}{{ info[amount_field] | format_currency }}
                         </p>
                         {% if view_type != 'receive' %}
-                        <button onclick="showQRModal('{{ player_name }}', {{ info[amount_field] }}, '{{ player_name }} thanh toan cau long')"
+                        <button onclick="showQRModal('{{ player_name }}', {{ info[amount_field] }}, '{{ short_code }}')"
                                 class="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 text-sm transition">
                             <i class="fas fa-qrcode mr-1"></i>QR
                         </button>
@@ -266,7 +268,18 @@ function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
 }
 
-function showQRModal(playerName, amount, description) {
+function removeDiacritics(str) {
+    return str.normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/đ/g, 'd')
+              .replace(/Đ/g, 'D');
+}
+
+function showQRModal(playerName, amount, shortCode) {
+    // Format: Manh thanh toan cau long P001
+    const nameNoDiacritics = removeDiacritics(playerName);
+    const description = `${nameNoDiacritics} thanh toan cau long ${shortCode}`;
+    
     const encodedDesc = encodeURIComponent(description);
     const encodedName = encodeURIComponent(VIETQR_CONFIG.accountName);
     

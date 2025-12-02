@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.routes.webhook import (
     extract_player_name,
+    extract_player_short_code,
     is_valid_payment_content,
     PAYMENT_KEYWORDS
 )
@@ -100,6 +101,57 @@ class TestWebhookFunctions(unittest.TestCase):
         # 'tt' (abbreviation) should be removed
         result = extract_player_name('Manh tt cau long')
         self.assertEqual(result, 'Manh')
+
+
+class TestExtractPlayerShortCode(unittest.TestCase):
+    """Test extract_player_short_code function"""
+
+    @patch('app.routes.webhook.Player')
+    def test_extract_short_code_basic(self, mock_player):
+        """Test extracting short_code from content"""
+        mock_player.find_by_short_code.return_value = {'name': 'Nguyễn Văn Mạnh', 'short_code': 'P001'}
+        
+        # Test with P001 pattern
+        result = extract_player_short_code('Manh thanh toan cau long P001')
+        mock_player.find_by_short_code.assert_called_with('P001')
+        self.assertEqual(result['short_code'], 'P001')
+
+    @patch('app.routes.webhook.Player')
+    def test_extract_short_code_with_date(self, mock_player):
+        """Test extracting short_code from content with date"""
+        mock_player.find_by_short_code.return_value = {'name': 'Nguyễn Văn Mạnh', 'short_code': 'P001'}
+        
+        result = extract_player_short_code('Manh thanh toan cau long - 28122025 - P001')
+        mock_player.find_by_short_code.assert_called_with('P001')
+        self.assertIsNotNone(result)
+
+    @patch('app.routes.webhook.Player')
+    def test_extract_short_code_case_insensitive(self, mock_player):
+        """Test case insensitivity for short_code"""
+        mock_player.find_by_short_code.return_value = {'name': 'Test', 'short_code': 'P002'}
+        
+        # Test lowercase
+        result = extract_player_short_code('manh thanh toan cau long p002')
+        mock_player.find_by_short_code.assert_called_with('P002')
+        self.assertIsNotNone(result)
+
+    @patch('app.routes.webhook.Player')
+    def test_extract_short_code_not_found(self, mock_player):
+        """Test when short_code not found in database"""
+        mock_player.find_by_short_code.return_value = None
+        
+        result = extract_player_short_code('Manh thanh toan cau long P999')
+        self.assertIsNone(result)
+
+    def test_extract_short_code_no_pattern(self):
+        """Test when no short_code pattern in content"""
+        result = extract_player_short_code('Manh thanh toan cau long')
+        self.assertIsNone(result)
+
+    def test_extract_short_code_empty_content(self):
+        """Test with empty content"""
+        self.assertIsNone(extract_player_short_code(''))
+        self.assertIsNone(extract_player_short_code(None))
 
 
 class TestTransactionModel(unittest.TestCase):

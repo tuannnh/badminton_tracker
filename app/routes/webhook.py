@@ -4,11 +4,30 @@ from flask import Blueprint, request, jsonify, current_app
 
 from app.models.transaction import Transaction
 from app.models.session import Session
+from app.models.player import Player
 
 webhook_bp = Blueprint('webhook', __name__)
 
 # Keywords to detect valid badminton payments (case-insensitive)
 PAYMENT_KEYWORDS = ['cau long', 'caulong', 'badminton', 'cl']
+
+
+def extract_player_short_code(content):
+    """
+    Parse player short_code from transaction content.
+    Find pattern P + 3 digits (P001, P002, ...)
+    Returns the Player document if found, else None.
+    """
+    if not content:
+        return None
+
+    # Find pattern P followed by 3 digits
+    match = re.search(r'P(\d{3})', content.upper())
+    if match:
+        short_code = "P" + match.group(1)
+        player = Player.find_by_short_code(short_code)
+        return player
+    return None
 
 
 def extract_player_name(content):
@@ -170,8 +189,16 @@ def sepay_webhook():
             'message': 'Invalid payment content - missing keywords'
         }), 200
 
-    # Extract player name from content
-    player_name = extract_player_name(content)
+    # First try to find player by short_code (P001, P002, etc.)
+    player = extract_player_short_code(content)
+    player_name = None
+
+    if player:
+        player_name = player['name']
+    else:
+        # Fall back to extracting player name from content
+        player_name = extract_player_name(content)
+
     if not player_name:
         Transaction.create({
             'sepay_id': sepay_id,
@@ -187,7 +214,7 @@ def sepay_webhook():
         })
         return jsonify({
             'success': False,
-            'message': 'Could not extract player name from content'
+            'message': 'Could not extract player from content'
         }), 200
 
     # Find unpaid sessions for this player

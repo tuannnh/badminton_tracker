@@ -48,8 +48,14 @@ def create_app():
     with app.app_context():
         from app.models.user import User
         from app.models.settings import Settings
+        from app.models.player import Player
 
         Settings.ensure_defaults_exist()
+
+        # Migrate player short_codes if needed
+        migrated_count = Player.migrate_short_codes()
+        if migrated_count > 0:
+            print(f"[App] ✅ Migrated {migrated_count} players with short_codes")
 
     # Register blueprints
     from app.routes.api import api_bp
