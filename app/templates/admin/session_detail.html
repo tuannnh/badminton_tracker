@@ -168,7 +168,7 @@
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="font-semibold text-red-600">{{ still_owed | format_currency }}</span>
-                        <button onclick="showQRModal('{{ p.player_name }}', {{ still_owed }}, '{{ p.player_name }} - {{ session_data.date | format_date }}')"
+                        <button onclick="showQRModal('{{ p.player_name }}', {{ still_owed }}, '{{ p.player_name }} - thanh toan cau long - {{ session_data.date | format_date }}')"
                                 class="bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 text-sm transition">
                             <i class="fas fa-qrcode mr-1"></i>QR
                         </button>
@@ -374,7 +374,7 @@ function startPolling(playerName) {
     stopPolling(); // Clear any existing interval
     pollingInterval = setInterval(() => {
         checkPaymentStatus(playerName);
-    }, 5000); // Poll every 5 seconds
+    }, 3000); // Poll every 3 seconds
 }
 
 function stopPolling() {
