@@ -1,3 +1,5 @@
+import urllib.parse
+
 from flask import Flask, session as flask_session
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -86,5 +88,18 @@ def create_app():
         if value is None:
             return ""
         return value.strftime("%d/%m/%Y %H:%M")
+
+    @app.template_filter('vietqr_url')
+    def vietqr_url(amount, description=""):
+        """Generate VietQR URL for payment QR code"""
+        bank_id = "TPB"
+        account_number = "03365790401"
+        account_name = "Nguyen Nha Hung Tuan"
+        template = "compact2"
+
+        encoded_desc = urllib.parse.quote(str(description))
+        encoded_name = urllib.parse.quote(account_name)
+
+        return f"https://img.vietqr.io/image/{bank_id}-{account_number}-{template}.png?amount={int(amount)}&addInfo={encoded_desc}&accountName={encoded_name}"
 
     return app
