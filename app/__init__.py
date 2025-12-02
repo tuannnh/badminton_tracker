@@ -1,3 +1,5 @@
+import urllib.parse
+
 from flask import Flask, session as flask_session
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -65,7 +67,14 @@ def create_app():
     def inject_globals():
         return {
             'admin_username': flask_session.get('admin_username', 'Admin'),
-            'admin_logged_in': flask_session.get('admin_logged_in', False)
+            'admin_logged_in': flask_session.get('admin_logged_in', False),
+            'vietqr_config': {
+                'bank_id': app.config.get('VIETQR_BANK_ID', 'TPB'),
+                'account_number': app.config.get('VIETQR_ACCOUNT_NUMBER', '03365790401'),
+                'account_name': app.config.get('VIETQR_ACCOUNT_NAME', 'Nguyen Nha Hung Tuan'),
+                'bank_name': app.config.get('VIETQR_BANK_NAME', 'TPBank'),
+                'template': app.config.get('VIETQR_TEMPLATE', 'compact2')
+            }
         }
 
     # Template filters
@@ -86,5 +95,18 @@ def create_app():
         if value is None:
             return ""
         return value.strftime("%d/%m/%Y %H:%M")
+
+    @app.template_filter('vietqr_url')
+    def vietqr_url(amount, description=""):
+        """Generate VietQR URL for payment QR code"""
+        bank_id = app.config.get('VIETQR_BANK_ID', 'TPB')
+        account_number = app.config.get('VIETQR_ACCOUNT_NUMBER', '03365790401')
+        account_name = app.config.get('VIETQR_ACCOUNT_NAME', 'Nguyen Nha Hung Tuan')
+        template = app.config.get('VIETQR_TEMPLATE', 'compact2')
+
+        encoded_desc = urllib.parse.quote(str(description))
+        encoded_name = urllib.parse.quote(account_name)
+
+        return f"https://img.vietqr.io/image/{bank_id}-{account_number}-{template}.png?amount={int(amount)}&addInfo={encoded_desc}&accountName={encoded_name}"
 
     return app

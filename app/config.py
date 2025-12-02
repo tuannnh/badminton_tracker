@@ -19,3 +19,10 @@ class Config:
     # App settings
     DEFAULT_COURT_PRICE_PER_HOUR = int(os.getenv('DEFAULT_COURT_PRICE_PER_HOUR', 139000))
     DEFAULT_SHUTTLECOCK_PRICE = int(os.getenv('DEFAULT_SHUTTLECOCK_PRICE', 25000))
+
+    # VietQR Payment Configuration
+    VIETQR_BANK_ID = os.getenv('VIETQR_BANK_ID', 'TPB')
+    VIETQR_ACCOUNT_NUMBER = os.getenv('VIETQR_ACCOUNT_NUMBER', '03365790401')
+    VIETQR_ACCOUNT_NAME = os.getenv('VIETQR_ACCOUNT_NAME', 'Nguyen Nha Hung Tuan')
+    VIETQR_BANK_NAME = os.getenv('VIETQR_BANK_NAME', 'TPBank')
+    VIETQR_TEMPLATE = os.getenv('VIETQR_TEMPLATE', 'compact2')
