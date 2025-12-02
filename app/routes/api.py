@@ -3,8 +3,9 @@ from bson import ObjectId
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from app.models. player import Player
+from app.models.player import Player
 from app.models.session import Session
+from app.models.transaction import Transaction
 
 api_bp = Blueprint('api', __name__)
 
@@ -160,3 +161,42 @@ def get_monthly_stats():
 
     summary = Session.get_monthly_summary(year, month)
     return jsonify(serialize_doc(summary))
+
+
+# ==========================================
+# Payment Status API (for webhook polling)
+# ==========================================
+
+@api_bp.route('/payment-status/<player_name>', methods=['GET'])
+def check_payment_status(player_name):
+    """
+    Check if there's a recent successful payment for this player.
+    Frontend will poll this endpoint after showing QR code.
+    Returns recent transactions within the last 5 minutes.
+    """
+    minutes = request.args.get('minutes', 5, type=int)
+
+    # Find recent successful transactions for this player
+    transactions = Transaction.find_recent_by_player(player_name, minutes=minutes)
+
+    if transactions:
+        # Get the most recent transaction
+        latest = transactions[0]
+        return jsonify({
+            'success': True,
+            'has_payment': True,
+            'transaction': {
+                'id': str(latest['_id']),
+                'amount': latest.get('transfer_amount', 0),
+                'content': latest.get('content', ''),
+                'gateway': latest.get('gateway', ''),
+                'created_at': latest.get('created_at').isoformat() if latest.get('created_at') else None,
+                'sessions_updated': latest.get('sessions_updated', [])
+            }
+        })
+
+    return jsonify({
+        'success': True,
+        'has_payment': False,
+        'message': f'No recent payments found for {player_name}'
+    })

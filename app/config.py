@@ -26,3 +26,6 @@ class Config:
     VIETQR_ACCOUNT_NAME = os.getenv('VIETQR_ACCOUNT_NAME', 'Nguyen Nha Hung Tuan')
     VIETQR_BANK_NAME = os.getenv('VIETQR_BANK_NAME', 'TPBank')
     VIETQR_TEMPLATE = os.getenv('VIETQR_TEMPLATE', 'compact2')
+
+    # Sepay Webhook Configuration
+    SEPAY_API_KEY = os.getenv('SEPAY_API_KEY', '')

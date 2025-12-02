@@ -56,11 +56,13 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.user import user_bp
     from app.routes.chat import chat_bp
+    from app.routes.webhook import webhook_bp
 
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(user_bp, url_prefix='/')
     app.register_blueprint(chat_bp, url_prefix='/chat')
+    app.register_blueprint(webhook_bp, url_prefix='/webhook')
 
     # Context processor để inject biến vào tất cả templates
     @app.context_processor
