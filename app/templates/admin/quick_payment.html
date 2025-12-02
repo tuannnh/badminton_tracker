@@ -233,12 +233,52 @@
                     Nội dung: <span id="qrDescription" class="font-medium"></span>
                 </p>
             </div>
+            <!-- Polling status indicator -->
+            <div id="pollingStatus" class="mt-4 text-sm text-gray-500">
+                <i class="fas fa-sync-alt fa-spin mr-1"></i>
+                Đang chờ xác nhận thanh toán...
+            </div>
         </div>
         <button onclick="closeQRModal()" class="w-full mt-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
             Đóng
         </button>
     </div>
 </div>
+
+<!-- Payment Success Modal -->
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4 text-center">
+        <div class="mb-4">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <i class="fas fa-check text-4xl text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Thanh toán thành công! 🎉</h3>
+            <p class="text-gray-600">Cảm ơn bạn đã thanh toán</p>
+        </div>
+        <div class="bg-green-50 rounded-lg p-4 mb-4">
+            <p class="text-sm text-gray-600">Số tiền đã nhận:</p>
+            <p id="successAmount" class="text-3xl font-bold text-green-600"></p>
+        </div>
+        <button onclick="closeSuccessModal()" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-medium">
+            <i class="fas fa-check-circle mr-2"></i>Đóng
+        </button>
+    </div>
+</div>
+
+<style>
+@keyframes confetti {
+    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -10px;
+    animation: confetti 3s ease-in-out forwards;
+    z-index: 9999;
+}
+</style>
 
 <script>
 const VIETQR_CONFIG = {
@@ -247,6 +287,8 @@ const VIETQR_CONFIG = {
     accountName: '{{ vietqr_config.account_name }}',
     template: '{{ vietqr_config.template }}'
 };
+
+let pollingInterval = null;
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
@@ -263,15 +305,81 @@ function showQRModal(playerName, amount, description) {
     document.getElementById('qrDescription').textContent = description;
     document.getElementById('qrModal').classList.remove('hidden');
     document.getElementById('qrModal').classList.add('flex');
+    
+    // Start polling for payment status
+    startPolling(playerName);
 }
 
 function closeQRModal() {
     document.getElementById('qrModal').classList.add('hidden');
     document.getElementById('qrModal').classList.remove('flex');
+    stopPolling();
+}
+
+function startPolling(playerName) {
+    stopPolling(); // Clear any existing interval
+    pollingInterval = setInterval(() => {
+        checkPaymentStatus(playerName);
+    }, 5000); // Poll every 5 seconds
+}
+
+function stopPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+async function checkPaymentStatus(playerName) {
+    try {
+        const response = await fetch(`/api/payment-status/${encodeURIComponent(playerName)}`);
+        const data = await response.json();
+        
+        if (data.success && data.has_payment) {
+            stopPolling();
+            closeQRModal();
+            showSuccessModal(data.transaction.amount);
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+    }
+}
+
+function showSuccessModal(amount) {
+    document.getElementById('successAmount').textContent = formatCurrency(amount);
+    document.getElementById('successModal').classList.remove('hidden');
+    document.getElementById('successModal').classList.add('flex');
+    createConfetti();
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').classList.add('hidden');
+    document.getElementById('successModal').classList.remove('flex');
+    // Refresh page to show updated payment status
+    location.reload();
+}
+
+function createConfetti() {
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#a29bfe'];
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 4000);
+        }, i * 50);
+    }
 }
 
 document.getElementById('qrModal').addEventListener('click', function(e) {
     if (e.target === this) closeQRModal();
+});
+
+document.getElementById('successModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSuccessModal();
 });
 </script>
 {% endblock %}
