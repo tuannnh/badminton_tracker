@@ -286,14 +286,12 @@ const VIETQR_CONFIG = {
 };
 
 let pollingInterval = null;
-let currentPlayerName = null;
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
 }
 
 function showQRModal(playerName, amount, description) {
-    currentPlayerName = playerName;
     const encodedDesc = encodeURIComponent(description);
     const encodedName = encodeURIComponent(VIETQR_CONFIG.accountName);
     
